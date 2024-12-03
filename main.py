@@ -1,23 +1,26 @@
-from pydub import AudioSegment
+import subprocess
 
-def convert_audio(input_file, output_file, codec='mp3', bitrate='192k', vbr=True):
-    # Carrega o arquivo de áudio
-    audio = AudioSegment.from_file(input_file)
+# Função para conversão de áudio usando ffmpeg diretamente
+def convert_with_ffmpeg(input_file, output_file, codec='mp3', vbr=True, bitrate='320k'):
+    # Comando básico do ffmpeg
+    command = ['ffmpeg', '-i', input_file, '-vn']  # '-vn' desativa a parte de vídeo
     
-    # Se for para VBR, vamos usar o parâmetro '-q:a' do ffmpeg, que controla a qualidade (usado para MP3 e AAC)
-    ffmpeg_options = {}
+    # Se for VBR, ajusta os parâmetros
     if vbr:
         if codec == 'mp3':
-            ffmpeg_options = {'format': 'mp3', 'codec': 'libmp3lame', 'audio_bitrate': bitrate, 'extra_args': ['-q:a', '0']}
+            command.extend(['-q:a', '0'])  # Qualidade máxima para MP3 VBR
         elif codec == 'aac':
-            ffmpeg_options = {'format': 'aac', 'codec': 'libfdk_aac', 'audio_bitrate': bitrate, 'extra_args': ['-vbr', '5']}
-    else:
-        ffmpeg_options = {'format': codec, 'codec': codec, 'audio_bitrate': bitrate}
+            command.extend(['-vbr', '5'])  # VBR para AAC
     
-    # Salva o arquivo de áudio convertido
-    audio.export(output_file, format=codec, **ffmpeg_options)
+    # Adiciona o codec e a taxa de bits
+    command.extend([output_file, '-b:a', bitrate])
+    
+    # Executa o comando usando subprocess
+    subprocess.run(command)
+    print(f"Arquivo convertido e salvo em {output_file}")
 
 # Exemplo de uso
-input_audio = 'entrada.wav'
-output_audio_mp3 = 'saida.mp3'
-convert_audio(input_audio, output_audio_mp3, codec='mp3', bitrate='192k', vbr=True)
+input_audio = 'A Ele.aac'  # Substitua com o caminho para seu arquivo de entrada
+output_audio_mp3 = 'A Ele.mp3'  # Substitua com o caminho de saída desejado
+convert_with_ffmpeg(input_audio, output_audio_mp3, codec='mp3', vbr=True, bitrate='320k')
+    
